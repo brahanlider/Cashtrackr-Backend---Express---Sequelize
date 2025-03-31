@@ -7,8 +7,8 @@ dotenv.config();
 export const db = new Sequelize(process.env.DATABASE_URL, {
   // Configuración de modelos (ruta segura con path.resolve)
   models: [__dirname + "/../models/**/*"],
-  //// Configuración de logs (solo en desarrollo)
-  //// logging: false,
+  // Configuración de logs (solo en desarrollo)
+  logging: false,
 
   //// Configuración de timestamps (mejor práctica): created etc
   //// define: {
