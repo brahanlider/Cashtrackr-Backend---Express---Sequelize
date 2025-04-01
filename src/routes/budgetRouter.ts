@@ -3,17 +3,15 @@ import { body, param } from "express-validator";
 import { BudgetController } from "../controllers/BudgetController";
 import { handleInputErrors } from "../middleware/validation";
 import Budget from "../models/Budget";
+import { validateBudgetExists, validateBudgetId } from "../middleware/budget";
 
 const router = Router();
 
 router.get("/", BudgetController.getAll);
 router.get(
   "/:id",
-  param("id")
-    .isInt({ min: 1 })
-    .withMessage("El ID debe ser un número entero positivo"),
-
-  handleInputErrors,
+  validateBudgetId,
+  validateBudgetExists,
   BudgetController.getById
 );
 router.post(
@@ -34,9 +32,8 @@ router.post(
 );
 router.put(
   "/:id",
-  param("id")
-    .isInt({ min: 1 })
-    .withMessage("El ID debe ser un número entero positivo"),
+  validateBudgetId,
+  validateBudgetExists,
 
   body("name")
     .trim()
@@ -60,10 +57,8 @@ router.put(
 );
 router.delete(
   "/:id",
-  param("id")
-    .isInt()
-    .withMessage("El ID debe ser un número entero"),
-
+  validateBudgetId,
+  validateBudgetExists,
 
   handleInputErrors,
   BudgetController.deleteById

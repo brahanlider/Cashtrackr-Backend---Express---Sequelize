@@ -18,20 +18,8 @@ export class BudgetController {
   };
 
   static getById = async (req: Request, res: Response) => {
-    try {
-      const { id } = req.params;
-      const budgetId = await Budget.findByPk(id);
-
-      if (!budgetId) {
-        const error = new Error("Presupuesto no encontrado");
-        res.status(404).json({ error: error.message });
-        return;
-      }
-
-      res.status(200).json(budgetId);
-    } catch (error) {
-      res.status(500).json({ error: "Error al obtener un producto por Id" });
-    }
+    // res.status(200).json(budget);
+    res.status(200).json(req.budget);
   };
 
   static create = async (req: Request, res: Response) => {
@@ -46,40 +34,14 @@ export class BudgetController {
   };
 
   static updateById = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const { name, amount } = req.body;
-    try {
-      const budget = await Budget.findByPk(id);
+    await req.budget.update(req.body);
 
-      if (!budget) {
-        const error = new Error("Presupuesto no encontrado");
-        res.status(404).json({ error: error.message });
-        return;
-      }
-
-      await budget.update({ name, amount });
-
-      res.status(200).json(budget);
-    } catch (error) {
-      res.status(500).json({ error: "Hubo un error al editar" });
-    }
+    res.status(200).json(req.budget);
   };
 
   static deleteById = async (req: Request, res: Response) => {
-    try {
-      const { id } = req.params;
-      const budget = await Budget.findByPk(id);
+    await req.budget.destroy();
 
-      if (!budget) {
-        const error = new Error("Presupuesto no encontrado");
-        res.status(404).json({ error: error.message });
-        return;
-      }
-      await budget.destroy();
-
-      res.status(200).json("Presupuesto eliminado correctamente");
-    } catch (error) {
-      res.status(500).json({ error: "Hubo un error al eliminar" });
-    }
+    res.status(200).json("Presupuesto eliminado correctamente");
   };
 }
