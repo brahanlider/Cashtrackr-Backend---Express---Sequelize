@@ -62,12 +62,25 @@ export const validateBudgetInput = async (
     .withMessage("El nombre del presupuesto es obligatorio")
     .run(req),
     await body("amount")
+      // .notEmpty()
+      // .withMessage("La cantidad del presupuesto no puede ir vacio")
+      // .isNumeric()
+      // .withMessage("Cantidad no válida")
+      // .custom((value) => value > 0)
+      // .withMessage("El presupuesto debe ser mayor a 0")
       .notEmpty()
-      .withMessage("La cantidad del presupuesto no puede ir vacio")
-      .isNumeric()
-      .withMessage("Cantidad no válida")
-      .custom((value) => value > 0)
-      .withMessage("El presupuesto debe ser mayor a 0")
+      .withMessage("El monto no puede estar vacío")
+      .isFloat({ min: 0.01 })
+      .withMessage("Debe ser un número > 0") // Valida números y convierte strings numéricos
+      .custom((value) => {
+        // Validación adicional para asegurar que no sea string
+        if (typeof value === "string") {
+          throw new Error(
+            'No se aceptan valores textuales (ej: "10"), debe ser número (ej: 10)'
+          );
+        }
+        return true;
+      })
       .run(req);
 
   next();

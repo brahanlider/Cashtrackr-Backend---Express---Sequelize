@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import Budget from "../models/Budget";
+import Expense from "../models/Expense";
 
 export class BudgetController {
   static getAll = async (req: Request, res: Response) => {
@@ -9,7 +10,7 @@ export class BudgetController {
           ["createdAt", "DESC"], // ← Formato correcto: array de arrays
         ],
         // limit: 1,
-        //whgere:{}
+        //where:{}
       });
       res.status(200).json(budgets);
     } catch (error) {
@@ -18,8 +19,11 @@ export class BudgetController {
   };
 
   static getById = async (req: Request, res: Response) => {
-    // res.status(200).json(budget);
-    res.status(200).json(req.budget);
+    const budget = await Budget.findByPk(req.budget.id, {
+      include: Expense,
+    });
+    res.status(200).json(budget);
+    // res.status(200).json(req.budget);
   };
 
   static create = async (req: Request, res: Response) => {
@@ -27,7 +31,7 @@ export class BudgetController {
       const budget = new Budget(req.body);
 
       await budget.save();
-      res.status(201).json("Presupuesto Creado Correctamente");
+      res.status(201).json(budget);
     } catch (error) {
       res.status(500).json({ error: "Hubo un eror" });
     }
