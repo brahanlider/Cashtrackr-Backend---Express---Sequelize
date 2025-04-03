@@ -1,8 +1,9 @@
 import type { Request, Response } from "express";
 import User from "../models/User";
-import { hashPassword } from "../utils/auth";
+import { checkPassword, hashPassword } from "../utils/auth";
 import { generateToken } from "../utils/token";
 import { AuthEmail } from "../emails/AuthEmail";
+import { generateJWT } from "../utils/jwt";
 
 export class AuthController {
   static createAccount = async (req: Request, res: Response) => {
@@ -54,11 +55,43 @@ export class AuthController {
     }
 
     user.confirmed = true;
-    user.token = null; //una vez confirmado => el token desaparece 
+    user.token = null; //una vez confirmado => el token desaparece
 
     await user.save();
 
     // res.json(user);
     res.json("Cuenta confirmada correctamente");
+  };
+
+  static loginAccount = async (req: Request, res: Response) => {
+    const { email, password } = req.body;
+
+    //1. Revisar que el usuario existe
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      const error = new Error("Usuario no encontrado");
+      res.status(404).json({ error: error.message });
+      return;
+    }
+
+    //2. Revisar si la cuenta fue confimada                        (403 = cuando no tiene sentido hacer re autenticacion)
+    if (!user.confirmed) {
+      const error = new Error("La Cuenta no ha sido confirmada");
+      res.status(403).json({ error: error.message });
+      return;
+    }
+
+    //4. Chequear la contraseña
+    const isPasswordCorrect = await checkPassword(password, user.password);
+    if (!isPasswordCorrect) {
+      const error = new Error("Password Incorrecto");
+      res.status(401).json({ error: error.message });
+      return;
+    }
+
+    //5.
+    const token = generateJWT(user.id);
+
+    res.json(token);
   };
 }
