@@ -2,6 +2,7 @@ import { Router } from "express";
 import { BudgetController } from "../controllers/BudgetController";
 import { handleInputErrors } from "../middleware/validation";
 import {
+  hasAccess,
   validateBudgetExists,
   validateBudgetId,
   validateBudgetInput,
@@ -12,11 +13,15 @@ import {
   validateExpenseId,
   validateExpenseInput,
 } from "../middleware/expense";
+import { authenticate } from "../middleware/auth";
 
 const router = Router();
 
+router.use(authenticate); // req.user => Proteccion de rutas
+
 router.param("budgetId", validateBudgetId);
-router.param("budgetId", validateBudgetExists);
+router.param("budgetId", validateBudgetExists); //req.budget
+router.param("budgetId", hasAccess); //=> si el usuario tiene permitido aceeder SOLO a sus presupuesto o gasto
 
 router.param("expenseId", validateExpenseId);
 router.param("expenseId", validateExpenseExists);
