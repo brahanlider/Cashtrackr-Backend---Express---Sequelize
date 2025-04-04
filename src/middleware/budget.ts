@@ -48,7 +48,7 @@ export const validateBudgetExists = async (
     req.budget = budget;
     next();
   } catch (error) {
-    res.status(500).json({ error: "Error al obtener un producto por Id" });
+    res.status(500).json({ error: "Hubo un error" });
   }
 };
 
