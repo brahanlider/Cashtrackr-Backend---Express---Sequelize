@@ -4,7 +4,7 @@ import Expense from "../models/Expense";
 
 export class BudgetController {
   static getAll = async (req: Request, res: Response) => {
-    console.log("Desde Mock", req.user.id);
+    // console.log("Desde Mock", req.user.id);
 
     try {
       const budgets = await Budget.findAll({
@@ -48,7 +48,7 @@ export class BudgetController {
   static updateById = async (req: Request, res: Response) => {
     await req.budget.update(req.body);
 
-    res.status(200).json(req.budget);
+    res.status(200).json("Presupuesto actualizado correctamente");
   };
 
   static deleteById = async (req: Request, res: Response) => {
