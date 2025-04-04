@@ -102,3 +102,10 @@ Datos de conexión:
 - Username: nombre_db_user
 
 - Password: contraseña_proporcionada_por_render
+
+
+# TEST
+npm i -D jest @types/jest ts-jest
+npx ts-jest config:init
+
+npm i -D node-mocks-http
