@@ -3,11 +3,7 @@ import Expense from "../models/Expense";
 
 export class ExpenseController {
   static getById = async (req: Request, res: Response) => {
-    try {
-      res.status(200).json(req.expense);
-    } catch (error) {
-      res.status(500).json({ error: "Hubo un error" });
-    }
+    res.status(200).json(req.expense);
   };
 
   static create = async (req: Request, res: Response) => {
@@ -25,12 +21,12 @@ export class ExpenseController {
   static updateById = async (req: Request, res: Response) => {
     await req.expense.update(req.body);
 
-    res.status(200).json(req.expense);
+    res.status(200).json("Se actualizó correctamente el gasto");
   };
 
   static deleteById = async (req: Request, res: Response) => {
     await req.expense.destroy();
 
-    res.status(200).json("Gasto Eliminado");
+    res.status(200).json("Gasto Eliminado Correctamente");
   };
 }
