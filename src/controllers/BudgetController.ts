@@ -4,7 +4,6 @@ import Expense from "../models/Expense";
 
 export class BudgetController {
   static getAll = async (req: Request, res: Response) => {
-
     console.log("Desde Mock", req.user.id);
 
     try {
@@ -21,7 +20,7 @@ export class BudgetController {
 
       res.status(200).json(budgets);
     } catch (error) {
-      console.log(error)
+      console.log(error);
       res.status(500).json({ error: "Hubo un eror" });
     }
   };
@@ -36,11 +35,11 @@ export class BudgetController {
 
   static create = async (req: Request, res: Response) => {
     try {
-      const budget = new Budget(req.body);
+      const budget = await Budget.create(req.body);
       budget.userId = req.user.id; //====> userID de la tabla
 
       await budget.save();
-      res.status(201).json(budget);
+      res.status(201).json("Presupuesto creado correctamente");
     } catch (error) {
       res.status(500).json({ error: "Hubo un eror" });
     }

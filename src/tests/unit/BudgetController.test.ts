@@ -5,6 +5,7 @@ import Budget from "../../models/Budget";
 
 jest.mock("../../models/Budget", () => ({
   findAll: jest.fn(),
+  create: jest.fn(),
 }));
 
 describe("BudgetController.getAll", () => {
@@ -88,5 +89,58 @@ describe("BudgetController.getAll", () => {
 
     expect(res.statusCode).toBe(500);
     expect(res._getJSONData()).toEqual({ error: "Hubo un eror" });
+  });
+});
+
+describe("BudgetController.create", () => {
+  // Debería crear un nuevo presupuesto y responder con el código de estado 201.
+  it("Should create a new budget and respond with statusCode 201", async () => {
+    const mockBudget = {
+      save: jest.fn().mockResolvedValue(true),
+    };
+    (Budget.create as jest.Mock).mockResolvedValue(mockBudget);
+    const req = createRequest({
+      method: "POST",
+      url: "/api/budgets",
+      user: { id: 1 },
+      body: { name: "Presupuesto de Prueba", amount: 1000 },
+    });
+
+    const res = createResponse();
+    await BudgetController.create(req, res);
+
+    const data = res._getJSONData();
+
+    expect(res.statusCode).toBe(201);
+    expect(data).toBe("Presupuesto creado correctamente");
+    expect(mockBudget.save).toHaveBeenCalled();
+    expect(mockBudget.save).toHaveBeenCalledTimes(1);
+    expect(Budget.create).toHaveBeenCalledWith(req.body);
+  });
+
+  // Debería gestionar el error de creación de presupuesto
+  it("Should handle budget creation error", async () => {
+    const mockBudget = {
+      save: jest.fn(),
+    };
+
+    (Budget.create as jest.Mock).mockRejectedValue(new Error());
+    const req = createRequest({
+      method: "POST",
+      url: "/api/budgets",
+      user: { id: 1 },
+      body: { name: "Presupuesto de Prueba", amount: 1000 },
+    });
+
+    const res = createResponse();
+    await BudgetController.create(req, res);
+
+    const data = res._getJSONData();
+
+    expect(res.statusCode).toBe(500);
+    expect(data).toEqual({ error: "Hubo un eror" });
+
+    expect(mockBudget.save).not.toHaveBeenCalled();
+    expect(Budget.create).toHaveBeenCalledWith(req.body);
   });
 });
