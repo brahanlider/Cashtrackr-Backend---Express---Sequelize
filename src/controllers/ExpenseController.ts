@@ -12,12 +12,11 @@ export class ExpenseController {
 
   static create = async (req: Request, res: Response) => {
     try {
-      const expense = await Expense.create({
-        ...req.body,
-        budgetId: Number(req.budget.id),
-      });
+      const expense = await Expense.create(req.body);
+      expense.budgetId = req.budget.id;
+      await expense.save();
 
-      res.status(201).json(expense);
+      res.status(201).json("Gasto Agregado Correctamente");
     } catch (error) {
       res.status(500).json({ error: "Hubo un error" });
     }
