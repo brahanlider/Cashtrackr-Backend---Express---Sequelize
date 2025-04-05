@@ -4,7 +4,9 @@ import morgan from "morgan";
 import { db } from "./config/db";
 import budgetRouter from "./routes/budgetRouter";
 import authRouter from "./routes/authRouter";
-async function connectDB() {
+
+//! se puso export por errores en supertest dando error en las consolas
+export async function connectDB() {
   try {
     await db.authenticate(); // ya podemos hacer operacione en la bd
     db.sync(); // crea las tablas y columnas en automatico
@@ -27,6 +29,10 @@ app.use(express.json());
 
 app.use("/api/budgets", budgetRouter);
 app.use("/api/auth", authRouter);
+
+app.get("/", (req, res) => {
+  res.send("Todo bien");
+});
 
 export default app;
 // const express = require("express");
