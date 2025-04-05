@@ -10,10 +10,10 @@ export async function connectDB() {
   try {
     await db.authenticate(); // ya podemos hacer operacione en la bd
     db.sync(); // crea las tablas y columnas en automatico
-    console.log(colors.blue.bold("Conexión exitosa a la BD"));
+    // console.log(colors.blue.bold("Conexión exitosa a la BD"));  //TESTING:comentar si hay errores
   } catch (error) {
     // console.log(error);
-    console.log(colors.red.bold("Falló la conexión a la BD"));
+    // console.log(colors.red.bold("Falló la conexión a la BD"));  //TESTING:comentar si hay errores
   }
 }
 

@@ -20,7 +20,7 @@ export class AuthEmail {
       `,
     });
 
-    console.log("MENSAJE ENVIADO", email.messageId);
+    // console.log("MENSAJE ENVIADO", email.messageId);  // TESTING : comentar por errores
   };
 
   // esto se enviara al usuario cuando quiera recuperar password
@@ -37,7 +37,7 @@ export class AuthEmail {
       `,
     });
 
-    console.log("MENSAJE ENVIADO", email.messageId);
+    // console.log("MENSAJE ENVIADO", email.messageId);  // TESTING : comentar por errores
   };
 }
 
