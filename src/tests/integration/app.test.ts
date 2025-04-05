@@ -115,3 +115,47 @@ describe("Authentication - Create Account", () => {
     expect(response.body).not.toHaveProperty("errors");
   });
 });
+
+describe("Authentication - Account Confirmation with token", () => {
+  // Debería mostrarse un error si el token está vacío o si el token es inválido
+  it("Should display error if token is empty or token is not valid", async () => {
+    const response = await request(server)
+      .post("/api/auth/confirm-account")
+      .send({
+        token: "not_valid",
+      });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body).toHaveProperty("errors");
+    expect(response.body.errors).toHaveLength(1);
+    expect(response.body.errors[0].msg).toBe("Token no válido");
+  });
+
+  // Debería mostrarse un error si el token no existe
+  it("Should display error if token doesn't exists", async () => {
+    const response = await request(server)
+      .post("/api/auth/confirm-account")
+      .send({
+        token: "123456",
+      });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.body).toHaveProperty("error");
+    expect(response.body.error).toBe("Token no válido");
+    expect(response.status).not.toBe(200);
+  });
+
+  // Debe confirmar la cuenta con un token válido
+  it("Should confirm account with a valid token", async () => {
+    const token = globalThis.cashTrackrConfirmationToken;
+
+    const response = await request(server)
+      .post("/api/auth/confirm-account")
+      .send({ token: token });
+
+    // console.log(globalThis);
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toBe("Cuenta confirmada correctamente");
+    expect(response.status).not.toBe("401");
+  });
+});
