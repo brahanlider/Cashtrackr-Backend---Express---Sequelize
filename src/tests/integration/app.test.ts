@@ -336,24 +336,29 @@ describe("Authentication - Login", () => {
   });
 });
 
-//___ Presupuesto - Budgets
-describe("GET /api/budgets", () => {
-  let jwt: string;
+//*_______________ Presupuesto - Budgets______________________
 
+//===> generando datos user reales
+let jwt: string;
+async function authenticateUser() {
+  const response = await request(server).post("/api/auth/login").send({
+    email: "test@test.com",
+    password: "12345678",
+  });
+  jwt = response.body;
+
+  expect(response.status).toBe(200);
+  // console.log(response.body);
+}
+
+describe("GET /api/budgets", () => {
   beforeAll(() => {
     jest.restoreAllMocks(); // restaurar las funciones de las jest.py a su implementacion original
   });
 
   //conseguimos datos reales (token)
   beforeAll(async () => {
-    const response = await request(server).post("/api/auth/login").send({
-      email: "test@test.com",
-      password: "12345678",
-    });
-    jwt = response.body;
-
-    expect(response.status).toBe(200);
-    // console.log(response.body);
+    await authenticateUser();
   });
 
   // Debería rechazarse el acceso no autenticado a los presupuestos sin un jwt
@@ -385,6 +390,32 @@ describe("GET /api/budgets", () => {
 
     expect(response.status).not.toBe(401);
     expect(response.body.error).not.toBe("No Autorizado");
+  });
+});
+
+describe("POST /api/budgets", () => {
+  //conseguimos datos reales (token)
+  beforeAll(async () => {
+    await authenticateUser();
+  });
+
+  // Debería rechazar solicitudes de publicación no autenticadas a presupuestos sin un jwt
+  it("Should reject unauthenticated post request to budgets without a jwt", async () => {
+    const response = await request(server).post("/api/budgets");
+
+    expect(response.status).toBe(401);
+    expect(response.body.error).toBe("No Autorizado");
+  });
+
+  // Debe mostrar validación cuando se envía el formulario con datos no válidos
+  it("Should display validation when the form is submitted with invalid data", async () => {
+    const response = await request(server)
+      .post("/api/budgets")
+      .auth(jwt, { type: "bearer" })
+      .send({});
+
+    expect(response.status).toBe(400);
+    expect(response.body.errors).toHaveLength(3);
   });
 });
 
