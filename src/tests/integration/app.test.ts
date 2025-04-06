@@ -417,5 +417,172 @@ describe("POST /api/budgets", () => {
     expect(response.status).toBe(400);
     expect(response.body.errors).toHaveLength(3);
   });
+
+  // Debe mostrar validación cuando se envía el formulario con datos no válidos
+  it("Should display validation when the form is submitted with invalid data", async () => {
+    const response = await request(server)
+      .post("/api/budgets")
+      .auth(jwt, { type: "bearer" })
+      .send({});
+
+    expect(response.status).toBe(400);
+    expect(response.body.errors).toHaveLength(3);
+  });
+
+  //! CREANDO budget presupuesto POST
+  it("CREANDO  budget presupuesto", async () => {
+    const response = await request(server)
+      .post("/api/budgets")
+      .auth(jwt, { type: "bearer" })
+      .send({
+        name: "Vacaciones",
+        amount: 2000,
+      });
+
+    expect(response.status).toBe(201);
+
+    expect(response.status).not.toBe(200);
+    expect(response.status).not.toBe(400);
+  });
 });
 
+describe("GET /api/budgets/:budgetId", () => {
+  //conseguimos datos reales (token)
+  beforeAll(async () => {
+    await authenticateUser();
+  });
+
+  // Debe rechazar solicitudes GET no autenticadas para obtener ID de presupuestos sin un JWT.
+  it("Should reject unauthenticated get request to budgets id without a jwt", async () => {
+    const response = await request(server).get("/api/budgets/1");
+
+    expect(response.status).toBe(401);
+    expect(response.body.error).toBe("No Autorizado");
+  });
+
+  // Debería devolver 400 solicitudes incorrectas cuando la identificación no es válida
+  it("Should return 400 bad request when id is not valid", async () => {
+    const response = await request(server)
+      .get("/api/budgets/not_valid")
+      .auth(jwt, { type: "bearer" });
+
+    expect(response.status).toBe(400);
+    expect(response.body.errors).toBeDefined();
+    expect(response.body.errors).toBeTruthy();
+    expect(response.body.errors).toHaveLength(1);
+    expect(response.body.errors[0].msg).toBe(
+      "El ID debe ser un número entero positivo"
+    );
+
+    expect(response.status).not.toBe(401);
+    expect(response.body.error).not.toBe("No Autorizado");
+  });
+
+  // Debería devolver 404 no encontrado cuando no existe un presupuesto
+  it("Should return 404 not found when a budget does not exists", async () => {
+    const response = await request(server)
+      .get("/api/budgets/5000")
+      .auth(jwt, { type: "bearer" });
+
+    expect(response.status).toBe(404);
+    expect(response.body.error).toBe("Presupuesto no encontrado");
+
+    expect(response.status).not.toBe(400);
+    expect(response.status).not.toBe(401);
+  });
+
+  // Debería devolver un único presupuesto por id
+  it("Should return a single budget by id", async () => {
+    const response = await request(server)
+      .get("/api/budgets/1")
+      .auth(jwt, { type: "bearer" });
+
+    expect(response.status).toBe(200);
+
+    expect(response.status).not.toBe(400);
+    expect(response.status).not.toBe(401);
+    expect(response.status).not.toBe(404);
+  });
+});
+
+describe("PUT /api/budgets/:budgetId", () => {
+  //conseguimos datos reales (token)
+  beforeAll(async () => {
+    await authenticateUser();
+  });
+
+  // Debe rechazar solicitudes put no autenticadas para obtener ID de presupuestos sin un JWT.
+  it("Should reject unauthenticated put request to budgets id without a jwt", async () => {
+    const response = await request(server).put("/api/budgets/1");
+
+    expect(response.status).toBe(401);
+    expect(response.body.error).toBe("No Autorizado");
+  });
+
+  // Debería mostrar errores de validación si el formulario está vacío
+  it("Should display validation errors if the form is empty", async () => {
+    const response = await request(server)
+      .put("/api/budgets/1")
+      .auth(jwt, { type: "bearer" })
+      .send({});
+
+    expect(response.status).toBe(400);
+    expect(response.body.errors).toBeTruthy();
+    expect(response.body.errors).toHaveLength(3);
+  });
+
+  // Debe actualizar un presupuesto por identificación y devolver un mensaje de éxito
+  it("Should update a budget by id and return a success message", async () => {
+    const response = await request(server)
+      .put("/api/budgets/1")
+      .auth(jwt, { type: "bearer" })
+      .send({
+        name: "Gratificacion",
+        amount: 1000,
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toBe("Presupuesto actualizado correctamente");
+  });
+
+  // !!!!!!!!
+  // * FATAL VILIDAR POR TOKEN --- RARO
+});
+
+describe("DELETE /api/budgets/:budgetId", () => {
+  //conseguimos datos reales (token)
+  beforeAll(async () => {
+    await authenticateUser();
+  });
+
+  // Debe rechazar solicitudes delete no autenticadas para obtener ID de presupuestos sin un JWT.
+  it("Should reject unauthenticated delete request to budgets id without a jwt", async () => {
+    const response = await request(server).delete("/api/budgets/1");
+
+    expect(response.status).toBe(401);
+    expect(response.body.error).toBe("No Autorizado");
+  });
+
+  // Debería devolver 404 no encontrado cuando no existe un presupuesto
+  it("Should return 404 not found when a budget does not exists", async () => {
+    const response = await request(server)
+      .delete("/api/budgets/3000")
+      .auth(jwt, { type: "bearer" });
+
+    expect(response.status).toBe(404);
+    expect(response.body.error).toBe("Presupuesto no encontrado");
+  });
+
+  // Debería eliminar un presupuesto y devolver un mensaje de éxito
+  it("Should delete a budget and return a success message", async () => {
+    const response = await request(server)
+      .delete("/api/budgets/1")
+      .auth(jwt, { type: "bearer" });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toBe("Presupuesto eliminado correctamente");
+  });
+
+  // !!!!!!!!
+  // * FATAL VILIDAR POR TOKEN --- NOSE NO PROBE
+});
