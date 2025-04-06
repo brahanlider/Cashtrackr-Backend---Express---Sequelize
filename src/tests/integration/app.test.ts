@@ -292,9 +292,9 @@ describe("Authentication - Login", () => {
     expect(checkPassword).toHaveBeenCalledTimes(1);
   });
 
-  // verificar si el password es correcto
-  // Debería devolver un error 401 si la contraseña es incorrecta
-  it("Should return a 401 error if the password is incorrect", async () => {
+  // exito
+  // Should return a jwt
+  it("Should return a jwt", async () => {
     const findOne = (
       jest.spyOn(User, "findOne") as jest.Mock
     ).mockResolvedValue({
@@ -335,3 +335,56 @@ describe("Authentication - Login", () => {
     expect(generateJWT).toHaveBeenCalledWith(1); //user.id
   });
 });
+
+//___ Presupuesto - Budgets
+describe("GET /api/budgets", () => {
+  let jwt: string;
+
+  beforeAll(() => {
+    jest.restoreAllMocks(); // restaurar las funciones de las jest.py a su implementacion original
+  });
+
+  //conseguimos datos reales (token)
+  beforeAll(async () => {
+    const response = await request(server).post("/api/auth/login").send({
+      email: "test@test.com",
+      password: "12345678",
+    });
+    jwt = response.body;
+
+    expect(response.status).toBe(200);
+    // console.log(response.body);
+  });
+
+  // Debería rechazarse el acceso no autenticado a los presupuestos sin un jwt
+  it("Should reject unauthenticated access to budgets without a jwt", async () => {
+    const response = await request(server).get("/api/budgets");
+
+    expect(response.status).toBe(401);
+    expect(response.body.error).toBe("No Autorizado");
+  });
+
+  // no valid token
+  // Debería permitir el acceso autenticado a los presupuestos sin un jwt válido
+  it("Should allow authenticated access to budgets without a valid jwt", async () => {
+    const response = await request(server)
+      .get("/api/budgets")
+      .auth("not_valid", { type: "bearer" });
+
+    expect(response.status).toBe(500);
+    expect(response.body.error).toBe("Token no válido");
+  });
+
+  // Debería permitir el acceso autenticado a los presupuestos con un jwt válido
+  it("Should allow authenticated access to budgets with a valid jwt", async () => {
+    const response = await request(server)
+      .get("/api/budgets")
+      .auth(jwt, { type: "bearer" });
+
+    expect(response.body).toHaveLength(0);
+
+    expect(response.status).not.toBe(401);
+    expect(response.body.error).not.toBe("No Autorizado");
+  });
+});
+
