@@ -1,6 +1,9 @@
 import request from "supertest";
 import server from "../../server";
 import { AuthController } from "../../controllers/AuthController";
+import User from "../../models/User";
+import * as authUtils from "../../utils/auth";
+import * as jwtUtils from "../../utils/jwt";
 
 describe("Authentication - Create Account", () => {
   beforeEach(() => {
@@ -157,5 +160,178 @@ describe("Authentication - Account Confirmation with token", () => {
     expect(response.statusCode).toBe(200);
     expect(response.body).toBe("Cuenta confirmada correctamente");
     expect(response.status).not.toBe("401");
+  });
+});
+
+describe("Authentication - Login", () => {
+  beforeEach(() => {
+    jest.clearAllMocks(); // limpia los mock previos y el contador se reinicia
+  });
+  // Debería mostrar errores de validación cuando el formulario esté vacío
+  it("Should display validation errors when the form is empty", async () => {
+    const response = await request(server).post("/api/auth/login").send({});
+
+    const loginMock = jest.spyOn(AuthController, "loginAccount");
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("errors");
+    expect(response.body.errors).toHaveLength(2);
+
+    expect(response.body.errors).not.toHaveLength(1);
+    expect(loginMock).not.toHaveBeenCalled();
+  });
+
+  // Debería mostrar errores de validación cuando el formulario esté vacío
+  it("Should return 400 bad request when the email is invalid", async () => {
+    const response = await request(server)
+      .post("/api/auth/login")
+      .send({ password: "password", email: "not_valid" });
+
+    const loginMock = jest.spyOn(AuthController, "loginAccount");
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("errors");
+    expect(response.body.errors).toHaveLength(1);
+    expect(response.body.errors[0].msg).toBe("Email no válido");
+
+    expect(response.body.errors).not.toHaveLength(2);
+    expect(loginMock).not.toHaveBeenCalled();
+  });
+
+  // controller usuario que no existe
+  // Debería devolver un error 400 si no se encuentra el usuario
+  it("Should return 400 error if the User is not found", async () => {
+    const response = await request(server)
+      .post("/api/auth/login")
+      .send({ password: "password", email: "user_not_found@test.com" });
+
+    expect(response.status).toBe(404);
+    expect(response.body).toHaveProperty("error");
+    expect(response.body.error).toBe("Usuario no encontrado");
+
+    expect(response.status).not.toBe(200);
+  });
+
+  // Cuando un usuario no ha sido confirmado
+  // Debería devolver un error 403 si la cuenta de usuario no está confirmada
+  it("Should return a 403 error if the User account is not confirmed", async () => {
+    //! ==> OTRA FORMAS: registrarse y loguearse sin confirmar
+    (jest.spyOn(User, "findOne") as jest.Mock).mockResolvedValue({
+      id: 1,
+      confirmed: false,
+      password: "hashedPassword",
+      email: "user_not_confirmed@test.com",
+    });
+
+    const response = await request(server)
+      .post("/api/auth/login")
+      .send({ password: "password", email: "user_not_confirmed@test.com" });
+
+    expect(response.status).toBe(403);
+    expect(response.body).toHaveProperty("error");
+    expect(response.body.error).toBe("La Cuenta no ha sido confirmada");
+
+    expect(response.status).not.toBe(200);
+    expect(response.status).not.toBe(400);
+  });
+
+  // //! ==> OTRA FORMAS: registrarse y loguearse sin confirmar
+
+  // Cuando un usuario no ha sido confirmado
+  // Debería devolver un error 403 si la cuenta de usuario no está confirmada
+  it("Should return a 403 error if the User account is not confirmed", async () => {
+    const userData = {
+      name: "Test",
+      password: "password",
+      email: "user_not_confirmed@test.com",
+    };
+    await request(server).post("/api/auth/create-account").send(userData);
+
+    const response = await request(server)
+      .post("/api/auth/login")
+      .send({ password: userData.password, email: userData.email });
+
+    expect(response.status).toBe(403);
+    expect(response.body).toHaveProperty("error");
+    expect(response.body.error).toBe("La Cuenta no ha sido confirmada");
+
+    expect(response.status).not.toBe(200);
+    expect(response.status).not.toBe(400);
+  });
+
+  // verificar si el password es correcto
+  // Debería devolver un error 401 si la contraseña es incorrecta
+  it("Should return a 401 error if the password is incorrect", async () => {
+    const findOne = (
+      jest.spyOn(User, "findOne") as jest.Mock
+    ).mockResolvedValue({
+      id: 1,
+      confirmed: true,
+      password: "hashedPassword",
+      email: "user_confirmed@test.com",
+    });
+
+    const checkPassword = jest
+      .spyOn(authUtils, "checkPassword")
+      .mockResolvedValue(false);
+
+    const response = await request(server).post("/api/auth/login").send({
+      password: "password_incorrecto",
+      email: "user_confirmed@test.com",
+    });
+
+    expect(response.status).toBe(401);
+    expect(response.body).toHaveProperty("error");
+    expect(response.body.error).toBe("Password Incorrecto");
+
+    expect(response.status).not.toBe(200);
+    expect(response.status).not.toBe(400);
+    expect(response.status).not.toBe(403);
+
+    expect(findOne).toHaveBeenCalledTimes(1);
+    expect(checkPassword).toHaveBeenCalledTimes(1);
+  });
+
+  // verificar si el password es correcto
+  // Debería devolver un error 401 si la contraseña es incorrecta
+  it("Should return a 401 error if the password is incorrect", async () => {
+    const findOne = (
+      jest.spyOn(User, "findOne") as jest.Mock
+    ).mockResolvedValue({
+      id: 1,
+      confirmed: true,
+      password: "hashedPassword",
+      email: "user_confirmed@test.com",
+    });
+
+    const checkPassword = jest
+      .spyOn(authUtils, "checkPassword")
+      .mockResolvedValue(true);
+
+    const generateJWT = jest
+      .spyOn(jwtUtils, "generateJWT")
+      .mockReturnValue("jwt_token");
+
+    const response = await request(server).post("/api/auth/login").send({
+      password: "password_correct",
+      email: "user_confirmed@test.com",
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual("jwt_token");
+
+    expect(findOne).toHaveBeenCalled();
+    expect(findOne).toHaveBeenCalledTimes(1);
+
+    expect(checkPassword).toHaveBeenCalled();
+    expect(checkPassword).toHaveBeenCalledTimes(1);
+    expect(checkPassword).toHaveBeenCalledWith(
+      "password_correct",
+      "hashedPassword"
+    );
+
+    expect(generateJWT).toHaveBeenCalled();
+    expect(generateJWT).toHaveBeenCalledTimes(1);
+    expect(generateJWT).toHaveBeenCalledWith(1); //user.id
   });
 });
