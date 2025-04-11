@@ -40,7 +40,8 @@ export class AuthController {
         token: user.token,
       });
 
-      res.status(201).json(user);
+      // res.status(201).json(user);
+      res.status(201).json("Cuenta creada correctamente"); // Se modifico
     } catch (error) {
       res.status(500).json({ error: "Hubo un error" });
     }
