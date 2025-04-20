@@ -92,4 +92,14 @@ router.post(
   AuthController.checkPassword
 );
 
+router.put(
+  "/update-user",
+  authenticate,
+  // body("name").notEmpty().withMessage("El nombre no puede ir vacio"),
+  // body("email").isEmail().withMessage("E-mail no válido"),
+  // handleInputErrors,
+
+  AuthController.updateUser
+);
+
 export default router;

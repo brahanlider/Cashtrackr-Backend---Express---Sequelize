@@ -183,7 +183,7 @@ export class AuthController {
       res.status(401).json({ error: error.message });
       return;
     }
-
+    //! Auth email y poner un metodo para que al cambiar la contraseña se cierra el user
     //3.Colocar en new password a bd y hashear
     user.password = await hashPassword(password);
     await user.save();
@@ -206,5 +206,31 @@ export class AuthController {
     }
 
     res.json("Password Correcto");
+  };
+
+  static updateUser = async (req: Request, res: Response) => {
+    const { name, email } = req.body;
+    try {
+      // Verificar si email ya existe en otro usuario
+      const existingUser = await User.findOne({
+        where: { email },
+      });
+
+      // Si existe y no es el usuario actual
+      if (existingUser && existingUser.id !== req.user.id) {
+        const error = new Error("El email ya está registrado por otro usuario");
+        res.status(409).json({ error: error.message });
+        return;
+      }
+
+      // Actualizar solo name y email del usuario actual
+      await User.update({ email, name }, {
+          where: { id: req.user.id },
+        }
+      );
+      res.json("Perfil actualizado correctamente");
+    } catch (error) {
+      res.status(500).json({ error: "Hubo un error" });
+    }
   };
 }
